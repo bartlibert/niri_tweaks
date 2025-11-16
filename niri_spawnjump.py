@@ -91,10 +91,22 @@ def focus_window(id: int) -> subprocess.CompletedProcess:
     return run_command(f"niri msg action focus-window --id {id}")
 
 
-def get_focused_window() -> dict:
+def get_focused_window() -> tuple[bool, dict | None]:
+    """
+    Function used to get current window info (as dictionary).
+    Note that it's possible that there is no focused window,
+    this can happen if the user is on an empty workspace,
+    if the overview is open (might be a bug?) or if the user
+    has a launcher open, for example. A boolean is returned
+    to indicate if the window info is valid.
+
+    Returns: is_valid_window, window_info_dict
+    """
     resp = run_command("niri msg --json focused-window", capture_output=True, text=True)
     resp.check_returncode()
-    return json.loads(resp.stdout)
+    focused_window_info = json.loads(resp.stdout)
+    is_valid_window = focused_window_info is not None
+    return is_valid_window, focused_window_info
 
 
 def get_active_workspace_ids() -> list[int]:
@@ -150,16 +162,16 @@ def pull_window(target_window_data: dict, all_windows_data: list[dict]) -> None:
 
     # For convenience
     target_id = target_window_data["id"]
-    orig_win = get_focused_window()
-    is_empty_workspace = orig_win is None
+    is_valid_win, orig_win = get_focused_window()
+    is_no_focused_window = not is_valid_win
 
     # If we're already focused on window, we don't need to pull it
-    orig_id = None if is_empty_workspace else orig_win["id"]
+    orig_id = None if is_no_focused_window else orig_win["id"]
     if orig_id == target_id:
         return
 
     # Move the target to the current workspace, if needed
-    orig_space_id = None if is_empty_workspace else orig_win["workspace_id"]
+    orig_space_id = None if is_no_focused_window else orig_win["workspace_id"]
     if orig_space_id != target_window_data["workspace_id"]:
         orig_space_idx = get_focused_workspace_idx(orig_space_id)
         run_command(f"niri msg action move-window-to-workspace {orig_space_idx} --window-id {target_id}")
@@ -168,7 +180,7 @@ def pull_window(target_window_data: dict, all_windows_data: list[dict]) -> None:
     focus_window(target_id)
 
     # We moved the window to the workspace, which is all we can do if it was already empty
-    if is_empty_workspace:
+    if is_no_focused_window:
         return
 
     # If we were focusing a floating window, we can't figure out what column to pull to, so do nothing
@@ -222,8 +234,8 @@ def push_window(target_window_data: dict, all_windows_data: list[dict], scratchp
     # Figure out where look after we push the window
     final_column_idx = max(1, target_window_data["layout"]["pos_in_scrolling_layout"][0] - 1)
     if not target_window_data["is_focused"]:
-        orig_win = get_focused_window()
-        final_column_idx = orig_win["layout"]["pos_in_scrolling_layout"][0] if orig_win is not None else 1
+        is_valid_win, orig_win = get_focused_window()
+        final_column_idx = orig_win["layout"]["pos_in_scrolling_layout"][0] if is_valid_win else 1
         focus_window(target_window_data["id"])
 
     # Un-stack the window before pushing if needed (IPC only allows pushing a full column)
@@ -246,8 +258,8 @@ if enable_appid_inspection:
 
     try:
         while True:
-            win_dict = get_focused_window()
-            print("app-id:", win_dict["app_id"])
+            is_valid_win, win_dict = get_focused_window()
+            print(f"app-id: {win_dict['app_id']}" if is_valid_win else "no app-id available")
             sleep(0.5)
 
     except KeyboardInterrupt:
@@ -319,8 +331,8 @@ for win_dict in target_win_list:
     target_pos_list.append(make_sortable_position(win_dict))
 
 # Figure out the current view position & add to listing if needed
-curr_win = get_focused_window()
-curr_pos = make_sortable_position(curr_win) if curr_win is not None else (get_focused_workspace_idx(), 0, 0, -1, -1)
+is_valid_win, curr_win = get_focused_window()
+curr_pos = make_sortable_position(curr_win) if is_valid_win else (get_focused_workspace_idx(), 0, 0, -1, -1)
 if curr_pos not in target_pos_list:
     target_pos_list.append(curr_pos)
 
