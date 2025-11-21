@@ -31,7 +31,7 @@ parser.add_argument("-z", "--hidden", nargs="+", help="Hide given workspace(s) w
 # For convenience
 args = parser.parse_args()
 TARGET_WORKSPACE_KEY = args.workspace[0]
-USE_OVERVIEW_TOGGLE = not args.jump
+ENABLE_COLUMN_JUMP = args.jump
 SKIP_EMPTY = args.skip_empty
 ALLOW_WRAP_AROUND = args.wrap
 HIDDEN_WSPACES_LIST = args.hidden
@@ -141,10 +141,7 @@ curr_wspace_handle = str(curr_wspace["idx"]) if target_wspace_handle.isdigit() e
 if curr_wspace_handle != target_wspace_handle:
     run_command(f"niri msg action focus-workspace {TARGET_WORKSPACE_KEY}")
 
-elif USE_OVERVIEW_TOGGLE:
-    run_command("niri msg action toggle-overview")
-
-else:
+elif ENABLE_COLUMN_JUMP:
     # Drop focus from floating windows (focus first/last doesn't work otherwise)
     curr_win = get_focused_window()
     if curr_win["is_floating"]:
@@ -158,3 +155,6 @@ else:
     else:
         run_command("niri msg action focus-column-last")
     pass
+
+else:
+    run_command("niri msg action toggle-overview")
