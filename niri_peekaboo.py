@@ -11,13 +11,19 @@ import json
 
 parser = argparse.ArgumentParser(description="Pull nearby column into view (floating) or restore floats to column")
 parser.add_argument("-l", "--peek_left", action="store_true", help="Peek from left column (default: peak from right)")
-parser.add_argument("-f", "--focus_peeked", action="store_true", help="Focus peeked window (default: focus tiling)")
+parser.add_argument(
+    "-u",
+    "--no_focus",
+    action="store_true",
+    help="Keep focus on original window when peeking, instead of focusing peeked window",
+)
 parser.add_argument(
     "-b", "--both_sides", action="store_true", help="Check both sides when peeking (*side not preserved on un-peek*)"
 )
+parser.add_argument("-o", "--opposite", action="store_true", help="Pull column to the opposite side")
 parser.add_argument("-n", "--no_resize", action="store_true", help="Disable auto resizing of floated windows")
-parser.add_argument("-x", "--float_x", type=int, default=0, help="x-position of floated windows (default 0)")
-parser.add_argument("-y", "--float_y", type=int, default=0, help="y-position of first floated window (default 0)")
+parser.add_argument("-x", "--x_offset", type=int, default=0, help="x-offset of floated windows (default 0)")
+parser.add_argument("-y", "--y_offset", type=int, default=0, help="y-offset of first floated window (default 0)")
 parser.add_argument("-g", "--y_gap", type=int, default=0, help="y-gap between multi-floated windows (default 0)")
 parser.add_argument(
     "-w", "--max_width_norm", type=float, default=-1, help="Max width of floated windows (value between 0 and 1)"
@@ -32,10 +38,11 @@ parser.add_argument(
 # For convenience
 args = parser.parse_args()
 PEEK_RIGHT = not args.peek_left
-FOCUS_PEEKED = args.focus_peeked
+FOCUS_PEEKED_WINDOW = not args.no_focus
+PULL_TO_OPPOSITE = args.opposite
 ALLOW_FLOAT_RESIZE = not args.no_resize
-TARGET_FLOAT_X = args.float_x
-TARGET_FLOAT_Y_OFFSET = args.float_y
+TARGET_X_OFFSET = args.x_offset
+TARGET_Y_OFFSET = args.y_offset
 FLOAT_Y_GAP = args.y_gap
 MAX_RESIZE_WIDTH = args.max_width_norm
 LIMIT_MAX_WIDTH = MAX_RESIZE_WIDTH > 0
@@ -177,7 +184,7 @@ if not have_peekable_wins:
 
 # Figure out y-positioning of target windows when floated
 peek_win_info = sorted(peek_win_info, key=lambda w: w["layout"]["pos_in_scrolling_layout"][1])
-target_float_y, csum_y = [], TARGET_FLOAT_Y_OFFSET
+target_float_y, csum_y = [], TARGET_Y_OFFSET
 for target_win in peek_win_info:
     target_float_y.append(csum_y)
     csum_y += target_win["layout"]["window_size"][1] + FLOAT_Y_GAP
@@ -202,11 +209,13 @@ for win_info, target_y in zip(peek_win_info, target_float_y):
         pass
 
     # Position floated windows on left or right side of screen
-    target_x = TARGET_FLOAT_X if PEEK_RIGHT else (monitor_w - target_w - TARGET_FLOAT_X)
+    left_x, right_x = TARGET_X_OFFSET, (monitor_w - target_w - TARGET_X_OFFSET)
+    pull_to_right = PEEK_RIGHT ^ PULL_TO_OPPOSITE
+    target_x = right_x if pull_to_right else left_x
     niri_action(f"move-floating-window --id {target_id} -x {target_x} -y {target_y}")
 
 # Set final focus window after peeking
-if FOCUS_PEEKED:
+if FOCUS_PEEKED_WINDOW:
     niri_focus_window(peek_win_info[0]["id"])
 else:
     niri_focus_window(user_win["id"])
