@@ -8,6 +8,7 @@ This repo holds some basic helper scripts that can be used to modify the behavio
 - [niri_window_details.sh](#niri_window_detailssh)
 - [niri_workspace_helper.py](#niri_workspace_helperpy)
 - [niri_peekaboo.py](#niri_peekaboopy)
+- [niri_overview_bind.py](#niri_overview_bindpy)
 - [fuzzel_helper.sh](#fuzzel_helpersh)
 - [swaybg_helper.sh](#swaybg_helpersh)
 
@@ -194,6 +195,26 @@ There are several configuration options which can be viewed by running (in a ter
 ```bash
 python3 /path/to/niri_peekaboo.py --help
 ```
+
+
+<br>
+
+## niri_overview_bind.py
+
+This is a very simple script, inspired by a post on the niri issue board ([#2842](https://github.com/YaLTeR/niri/discussions/2842)) about setting up different keybinds in overview mode. The general script usage is:
+
+```bash
+niri_overview_bind.sh 'command in overview mode' 'command in normal mode'
+```
+
+
+ For example, an intuitive use of this is to re-use the shortcuts normally used to [move windows around](https://github.com/YaLTeR/niri/blob/54c7fdcd1adcfade596aca1070062f3f0fb5d4d0/resources/default-config.kdl#L412-L419) to move _workspaces_ when in overview mode. This can be done as follows:
+
+```kdl
+Mod+Ctrl+Down  { spawn-sh "bash /path/to/niri_overview_bind.sh 'move-workspace-down' 'move-window-down'"; }
+```
+
+This removes the need for remembering [dedicated keybinds](https://github.com/YaLTeR/niri/blob/54c7fdcd1adcfade596aca1070062f3f0fb5d4d0/resources/default-config.kdl#L472-L475) for moving workspaces!
 
 
 <br>
