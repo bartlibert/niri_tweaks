@@ -170,45 +170,33 @@ def pull_window(target_window_data: dict, all_windows_data: list[dict]) -> None:
     if orig_id == target_id:
         return
 
-    # Move the target to the current workspace, if needed
+    # Figure out which workspace we're working with
+    target_space_id = target_window_data["workspace_id"]
     orig_space_id = None if is_no_focused_window else orig_win["workspace_id"]
-    if orig_space_id != target_window_data["workspace_id"]:
-        orig_space_idx = get_focused_workspace_idx(orig_space_id)
+    orig_space_idx = get_focused_workspace_idx(orig_space_id)
+
+    # Some funky logic here...
+    # -> If target is already on the same workspace and close by, just focus it
+    # -> If it's far away, we move it *off* the workspace and then back
+    # -> Moving off workspace and back has 3 advantages (compared to moving direct beside us)
+    #   - Allows us to target the window directly, without having to worry about it's column (e.g. unstacking it)
+    #   - Automatically places the target right beside our current focus
+    #   - Doesn't require shifting the viewport to reposition the window
+    is_target_on_workspace = orig_space_id == target_space_id
+    if is_target_on_workspace:
+        orig_column_idx = orig_win["layout"]["pos_in_scrolling_layout"][0]
+        target_column_idx = target_window_data["layout"]["pos_in_scrolling_layout"][0]
+        is_target_far_away = abs(orig_column_idx - target_column_idx) > 1
+        if is_target_far_away:
+            run_command(f"niri msg action move-window-to-workspace {orig_space_idx + 1} --window-id {target_id}")
+            run_command(f"niri msg action move-window-to-workspace {orig_space_idx} --window-id {target_id}")
+
+    else:
+        # Target is on a different workspace, so move it to current space
+        # (this also places it to the right of our focused window)
         run_command(f"niri msg action move-window-to-workspace {orig_space_idx} --window-id {target_id}")
 
-    # We'll want the target focused, no matter what we do next...
     focus_window(target_id)
-
-    # We moved the window to the workspace, which is all we can do if it was already empty
-    if is_no_focused_window:
-        return
-
-    # If we were focusing a floating window, we can't figure out what column to pull to, so do nothing
-    if orig_win["is_floating"]:
-        return
-
-    # If target is floating, we already moved it to the workspace, so we're done
-    # -> Would be nice to position under cursor, but niri IPC doesn't provide this info...?
-    if target_window_data["is_floating"]:
-        return
-
-    # Un-stack the window before pulling, so we only pull the target (IPC only allows pulling a full column)
-    if check_is_stacked_in_column(target_window_data, all_windows_data):
-        run_command("niri msg action consume-or-expel-window-left")
-
-    # Move the target window next to where we're looking (if it isn't already there)
-    orig_column_idx = orig_win["layout"]["pos_in_scrolling_layout"][0]
-    dest_column_idx = orig_column_idx + 1
-    target_column_idx = target_window_data["layout"]["pos_in_scrolling_layout"][0]
-    if target_column_idx != dest_column_idx:
-        run_command(f"niri msg action move-column-to-index {dest_column_idx}")
-
-        # Bit of a hack, since niri IPC doesn't include camera inspection/control
-        # We quickly focus the original window to try to force the niri 'camera' to look at
-        # both the window we were on and the window we've just pulled.
-        # If we don't do this, the camera may pan our original window out of view, which is jarring
-        focus_window(orig_id)
-        focus_window(target_id)
 
     return
 
