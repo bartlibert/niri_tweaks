@@ -129,6 +129,11 @@ def get_focused_workspace_idx(default_if_missing: int = 1) -> int:
     return workspace_idx
 
 
+def get_window_position(window_data: dict, position_if_floating: tuple[int, int] = (0, 0)) -> tuple[int, int]:
+    """Helper used to get window (column, row) position, with fallback for floating windows"""
+    return position_if_floating if window_data["is_floating"] else window_data["layout"]["pos_in_scrolling_layout"]
+
+
 def get_windows_list() -> list[dict]:
     resp = run_command("niri msg --json windows", capture_output=True, text=True)
     resp.check_returncode()
@@ -144,12 +149,12 @@ def check_is_stacked_in_column(target_window_data: dict, all_windows_data: list[
 
     # Count how many windows have the same target workspace/column position
     target_wspace_id = target_window_data["workspace_id"]
-    target_column = target_window_data["layout"]["pos_in_scrolling_layout"][0]
+    target_column, _ = get_window_position(target_window_data)
     num_same_col = 0
     for other_win in all_windows_data:
         if other_win["is_floating"] or other_win["workspace_id"] != target_wspace_id:
             continue
-        if other_win["layout"]["pos_in_scrolling_layout"][0] == target_column:
+        if get_window_position(other_win)[0] == target_column:
             num_same_col += 1
         if num_same_col > 1:
             break
@@ -176,7 +181,7 @@ def pull_window(target_window_data: dict, all_windows_data: list[dict]) -> None:
     orig_space_idx = get_focused_workspace_idx(orig_space_id)
 
     # Some funky logic here...
-    # -> If target is already on the same workspace and close by, just focus it
+    # -> If target is already on the same workspace and nearby, just focus it
     # -> If it's far away, we move it *off* the workspace and then back
     # -> Moving off workspace and back has 3 advantages (compared to moving direct beside us)
     #   - Allows us to target the window directly, without having to worry about it's column (e.g. unstacking it)
@@ -184,8 +189,9 @@ def pull_window(target_window_data: dict, all_windows_data: list[dict]) -> None:
     #   - Doesn't require shifting the viewport to reposition the window
     is_target_on_workspace = orig_space_id == target_space_id
     if is_target_on_workspace:
-        orig_column_idx = orig_win["layout"]["pos_in_scrolling_layout"][0]
-        target_column_idx = target_window_data["layout"]["pos_in_scrolling_layout"][0]
+        is_orig_float, is_target_float = [win_info["is_floating"] for win_info in (orig_win, target_window_data)]
+        orig_column_idx, _ = get_window_position(orig_win)
+        target_column_idx, _ = get_window_position(target_window_data, position_if_floating=(orig_column_idx, 0))
         is_target_far_away = abs(orig_column_idx - target_column_idx) > 1
         if is_target_far_away:
             run_command(f"niri msg action move-window-to-workspace {orig_space_idx + 1} --window-id {target_id}")
@@ -220,10 +226,10 @@ def push_window(target_window_data: dict, all_windows_data: list[dict], scratchp
         return
 
     # Figure out where look after we push the window
-    final_column_idx = max(1, target_window_data["layout"]["pos_in_scrolling_layout"][0] - 1)
+    final_column_idx = max(1, get_window_position(target_window_data)[0] - 1)
     if not target_window_data["is_focused"]:
         is_valid_win, orig_win = get_focused_window()
-        final_column_idx = orig_win["layout"]["pos_in_scrolling_layout"][0] if is_valid_win else 1
+        final_column_idx = get_window_position(orig_win)[0] if is_valid_win else 1
         focus_window(target_window_data["id"])
 
     # Un-stack the window before pushing if needed (IPC only allows pushing a full column)
@@ -308,7 +314,7 @@ if num_already_open == 1:
 # -> id isn't meant for sorting, it's included so we can get back the window id easily after sorting/indexing
 make_sortable_position = lambda d: (
     d["workspace_id"],
-    *(d["layout"]["pos_in_scrolling_layout"] if not d["is_floating"] else (0, 0)),
+    *(get_window_position(d)),
     d["pid"],
     d["id"],
 )
