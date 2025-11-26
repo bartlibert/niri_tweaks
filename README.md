@@ -156,22 +156,22 @@ This script augments both the `focus-workspace` and `focus-workspace-up/down` co
 
 When replacing the `focus-workspace-up/down` commands, this script can be made to skip over empty workspaces or marked (e.g. hidden) workspaces as well as handle wrap-around. It can also act as a `focus-first/last` command.
 
-To use this script, replace the existing [focus-workspace](https://github.com/YaLTeR/niri/blob/2776005c5fc4fbb85636672213b8b84a319dfb01/resources/default-config.kdl#L516-L524) keybinds with a call to this script followed by a workspace index, for example:
+To use this script, replace the existing [focus-workspace](https://github.com/YaLTeR/niri/blob/2776005c5fc4fbb85636672213b8b84a319dfb01/resources/default-config.kdl#L516-L524) keybinds with a call to this script followed by a workspace index or name, for example:
 ```kdl
-Mod+1 { spawn "python3" "/path/to/niri_workspace_helper.py" "1"; }
+Mod+1 { spawn-sh "python3 /path/to/niri_workspace_helper.py 1"; }
 ```
 
 As an alternative to toggling the overview, the `--jump` or `-j` flag can be added to instead jump to the first or last column of the workspace (when already on the focused workspace). This removes the need for dedicated [Mod+Home/Mod+End](https://github.com/YaLTeR/niri/blob/e837e39623457dc5ad29c34a5ce4d4616e5fbf1e/resources/default-config.kdl#L427-L428) keybinds, for example.
 
-To instead cycle through workspaces, provide a keyword of `next`, `prev`, `first` or `last` instead of an index. To skip empty workspaces use `-s`. To 'hide' workspaces, list them after the `-z` flag, for example:
+To instead cycle through workspaces, provide a keyword of `up`, `down`, `first` or `last` instead of an index. To skip empty workspaces use `-s`. To _always_ skip specific workspaces (even if not empty), list them after the `--hidden` (or `-z`) flag, for example:
 ```kdl
-// Next/previous
-Mod+apostrophe { spawn "python3" "/path/to/niri_workspace_helper.py" "next" "--wrap" "-z" "scratch" "invis"; }
-Mod+semicolon { spawn "python3" "/path/to/niri_workspace_helper.py" "prev" "-j" "-s"; }
+// Up/down
+Mod+apostrophe { spawn-sh "python3 /path/to/niri_workspace_helper.py down -ws --hidden scratch"; }
+Mod+semicolon { spawn-sh "python3 /path/to/niri_workspace_helper.py up -ws -z scratch"; }
 
 // First/last
-Mod+grave { spawn "python3" "/path/to/niri_workspace_helper.py" "first" "-s"; }
-Mod+backspace { spawn "python3" "/path/to/niri_workspace_helper.py" "last" "-s"; }
+Mod+grave { spawn-sh "python3 /path/to/niri_workspace_helper.py first -s"; }
+Mod+backspace { spawn-sh "python3 /path/to/niri_workspace_helper.py last -s"; }
 ```
 
 More information about the flags can be found by running the script directly (in a terminal) with `--help`:

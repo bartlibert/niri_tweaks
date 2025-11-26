@@ -15,7 +15,7 @@ parser.add_argument(
     "workspace",
     nargs=1,
     type=str,
-    help="Workspace index or name, or movement command: 'next', 'prev', 'first' or 'last'",
+    help="Workspace index or name, or movement command: 'up', 'down', 'first' or 'last'",
 )
 parser.add_argument(
     "-j",
@@ -23,7 +23,7 @@ parser.add_argument(
     action="store_true",
     help="If enabled, jump to first/last column (instead of toggling overview) if already on the target workspace",
 )
-parser.add_argument("-s", "--skip_empty", action="store_true", help="Skip empty workspaces (with next/prev/first/last)")
+parser.add_argument("-s", "--skip_empty", action="store_true", help="Skip empty workspaces (with up/down/first/last)")
 parser.add_argument("-w", "--wrap", action="store_true", help="If there is no next/prev workspace, wrap around")
 parser.add_argument("-z", "--hidden", nargs="+", help="Hide given workspace(s) when moving. Can list multiple names")
 
@@ -92,7 +92,7 @@ if curr_wspace is None:
 # %% Handle workspace command cases
 
 # Handle special target cases
-if TARGET_WORKSPACE_KEY in ("first", "last", "next", "prev"):
+if TARGET_WORKSPACE_KEY in ("first", "last", "up", "down", "next", "prev"):
 
     # Only consider workspaces on the same output and ignore empty/hidden workspaces
     candidate_wspaces_info = [ws for ws in all_wspaces_info if ws["output"] == curr_wspace["output"]]
@@ -116,13 +116,13 @@ if TARGET_WORKSPACE_KEY in ("first", "last", "next", "prev"):
     elif TARGET_WORKSPACE_KEY == "last":
         target_wspace_info = get_last_workspace(candidate_wspaces_info)
 
-    elif TARGET_WORKSPACE_KEY == "next":
+    elif TARGET_WORKSPACE_KEY in ("down", "next"):
         next_wspaces_info = [ws for ws in candidate_wspaces_info if ws["idx"] > curr_wspace_idx]
         if len(next_wspaces_info) == 0:
             next_wspaces_info = [get_first_workspace(candidate_wspaces_info)] if ALLOW_WRAP_AROUND else [curr_wspace]
         target_wspace_info = min(next_wspaces_info, key=lambda ws: ws["idx"])
 
-    elif TARGET_WORKSPACE_KEY == "prev":
+    elif TARGET_WORKSPACE_KEY in ("up", "prev"):
         prev_wspaces_info = [ws for ws in candidate_wspaces_info if ws["idx"] < curr_wspace_idx]
         if len(prev_wspaces_info) == 0:
             prev_wspaces_info = [get_last_workspace(candidate_wspaces_info)] if ALLOW_WRAP_AROUND else [curr_wspace]
