@@ -211,7 +211,7 @@ niri_overview_bind.sh 'command in overview mode' 'command in normal mode'
  For example, an intuitive use of this is to re-use the shortcuts normally used to [move windows around](https://github.com/YaLTeR/niri/blob/54c7fdcd1adcfade596aca1070062f3f0fb5d4d0/resources/default-config.kdl#L412-L419) to move _workspaces_ when in overview mode. This can be done as follows:
 
 ```kdl
-Mod+Ctrl+Down  { spawn-sh "bash /path/to/niri_overview_bind.sh 'move-workspace-down' 'move-window-down'"; }
+Mod+Ctrl+Down { spawn-sh "bash /path/to/niri_overview_bind.sh 'move-workspace-down' 'move-window-down-or-to-workspace-down'"; }
 ```
 
 This removes the need for remembering [dedicated keybinds](https://github.com/YaLTeR/niri/blob/54c7fdcd1adcfade596aca1070062f3f0fb5d4d0/resources/default-config.kdl#L472-L475) for moving workspaces!
