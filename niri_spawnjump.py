@@ -50,6 +50,12 @@ parser.add_argument("--no_spawn", action="store_true", help="Never spawn, only j
 parser.add_argument(
     "--always_spawn", action="store_true", help="Always spawn, no jumping (may be useful for scripting?)"
 )
+parser.add_argument(
+    "-o",
+    "--spawn_in_overview",
+    action="store_true",
+    help="If enabled, instances are always spawned (unconditionally) in overview mode",
+)
 
 # For convenience
 args = parser.parse_args()
@@ -65,6 +71,7 @@ NO_FLOATS = args.no_floats
 NO_TILES = args.no_tiles
 ENABLE_SPAWN = not args.no_spawn
 ALWAYS_SPAWN = args.always_spawn
+SPAWN_IN_OVERVIEW = args.spawn_in_overview
 
 # Sanity checks
 assert not (NO_FLOATS and NO_TILES), "Cannot disable checks for floating & tiled windows (enable only one or neither)"
@@ -164,6 +171,14 @@ def check_is_stacked_in_column(target_window_data: dict, all_windows_data: list[
             break
 
     return num_same_col > 1
+
+
+def check_is_overview_open() -> bool:
+    """Returns True if the overview is open, False otherwise"""
+    resp = run_command("niri msg --json overview-state", capture_output=True, text=True)
+    resp.check_returncode()
+    overview_state_dict = json.loads(resp.stdout)
+    return overview_state_dict.get("is_open", False)
 
 
 def pull_window(target_window_data: dict, all_windows_data: list[dict]) -> None:
@@ -272,6 +287,10 @@ if enable_appid_inspection:
 # Check if the target app-id is already opened
 all_win_list = get_windows_list()
 target_win_list = [w for w in all_win_list if str(w["app_id"]).lower() == TARGET_APP_ID.lower()]
+
+# Handle special overview mode toggle
+if SPAWN_IN_OVERVIEW:
+    ALWAYS_SPAWN = ALWAYS_SPAWN or check_is_overview_open()
 
 # Handle script arg modifiers
 if ALWAYS_SPAWN:

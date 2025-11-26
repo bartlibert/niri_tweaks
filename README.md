@@ -98,9 +98,9 @@ This script acts as an alternative to the `spawn` command in niri. It can be use
 python3 /path/to/niri_spawnjump.py --help
 ```
 
-For example, `-w` will cause jump/cycling behavior to only search on the current workspace, which has the effect of creating one instance per workspace. The `-l` flag can be used to set a spawn limit >1, for example `-l 3` would allow three instances to be spawned before jumping/cycling between them.
+For example, `-w` will cause jump/cycling behavior to only search on the current workspace, which has the effect of creating one instance per workspace. The `-l` flag can be used to set a spawn limit >1, for example `-l 3` would allow three instances to be spawned before jumping/cycling between them. If having a window limit is sometimes a problem, the `-o` flag can be set which allows for unconditionally spawning windows when the overview is open.
 
-As an alternative to cycling, the `-p` and `-s` flags can be used to 'pull' and 'push' (respectively) an existing instance instead of jumping to it. This results in behavior similar to the ability to _minimize_ a window from more conventional windowing systems. For example, this seems to make sense for binding to a file explorer.
+As an alternative to cycling, the `-p` and `-s` flags can be used to 'pull' and 'push' (respectively) an existing instance instead of jumping to it. This results in behavior similar to the ability to _minimize_ a window from more conventional windowing systems. This seems to make sense for binding to a file explorer, for example.
 
 ### Usage
 
