@@ -26,6 +26,9 @@ parser.add_argument(
     help="Spawn command used to run an application (e.g. 'firefox' or 'flatpak run app.zen_browser.zen')",
 )
 parser.add_argument("app_id", nargs="?", type=str, help="Target app-id (only needed if different from the run command)")
+parser.add_argument(
+    "-l", "--limit", type=int, default=1, help="Number of allowed instances to spawn before jumping (default: 1)"
+)
 parser.add_argument("-b", "--backward", action="store_true", help="Cycle backwards instead of forward")
 parser.add_argument("-w", "--workspace", action="store_true", help="Only search on active workspace")
 parser.add_argument("-p", "--pull", action="store_true", help="If an instance exists, pull it next to focused window")
@@ -52,6 +55,7 @@ parser.add_argument(
 args = parser.parse_args()
 COMMAND = args.command
 TARGET_APP_ID = args.app_id
+SPAWN_LIMIT = max(1, args.limit)
 CYCLE_FORWARD = not args.backward
 ACTIVE_WORKSPACE_ONLY = args.workspace
 ENABLE_PULL = args.pull
@@ -282,7 +286,7 @@ if NO_TILES:
 
 # Open if no existing window
 num_already_open = len(target_win_list)
-if num_already_open == 0:
+if num_already_open < SPAWN_LIMIT:
     if ENABLE_SPAWN and COMMAND is not None:
         # Run the command and detach from caller
         subprocess.Popen(
