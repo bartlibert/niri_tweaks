@@ -289,8 +289,8 @@ all_win_list = get_windows_list()
 target_win_list = [w for w in all_win_list if str(w["app_id"]).lower() == TARGET_APP_ID.lower()]
 
 # Handle special overview mode toggle
-if SPAWN_IN_OVERVIEW:
-    ALWAYS_SPAWN = ALWAYS_SPAWN or check_is_overview_open()
+if SPAWN_IN_OVERVIEW and check_is_overview_open():
+    ALWAYS_SPAWN = True
 
 # Handle script arg modifiers
 if ALWAYS_SPAWN:

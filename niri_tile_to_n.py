@@ -20,7 +20,7 @@ from collections import deque
 
 # Set built-in defaults (helpful for debugging)
 default_N = 3
-default_delay_ms = 2500 if perf_counter() < 60 else 0
+default_delay_ms = 1000 if perf_counter() < 5 else 0
 default_maximize_solos = True
 default_maximize_solo_on_close = True
 default_collapse_solos_on_open = True
@@ -65,6 +65,12 @@ parser.add_argument(
     help=f"Apply tiling logic to windows that are moved into other workspaces (default: {default_apply_on_move})",
 )
 parser.add_argument(
+    "-e",
+    "--maximize_to_edges",
+    action="store_true",
+    help="Use maximize-to-edges instead of maximize-column",
+)
+parser.add_argument(
     "-dn",
     action="store_false" if default_debug_names else "store_true",
     help="Enable event name printing, for debugging",
@@ -83,6 +89,7 @@ MAXIMIZE_SOLOS = args.x
 MAXIMIZE_SOLOS_ON_CLOSE = args.xc
 COLLAPSE_SOLOS_ON_OPEN = args.c
 APPLY_TO_MOVED_WINDOWS = args.m
+USE_MAX_TO_EDGES = args.maximize_to_edges
 ENABLE_EVENT_NAME_DEBUG_PRINT = args.dn
 ENABLE_EVENT_DATA_DEBUG_PRINT = args.dd
 
@@ -310,10 +317,10 @@ def toggle_window_maximization(target_window_id: int, focused_window_id: int):
     """Helper used to toggle the maximization state of a window, without messing with current focused window"""
 
     if target_window_id == focused_window_id:
-        niri_action.action("MaximizeColumn")
+        niri_action.action("MaximizeWindowToEdges" if USE_MAX_TO_EDGES else "MaximizeColumn")
     else:
         niri_action.action("FocusWindow", id=target_window_id)
-        niri_action.action("MaximizeColumn")
+        niri_action.action("MaximizeWindowToEdges" if USE_MAX_TO_EDGES else "MaximizeColumn")
         niri_action.action("FocusWindow", id=focused_window_id)
 
     return
@@ -372,7 +379,7 @@ niri_action = NiriActions(skt_path)
 
 # Sanity check. Make sure we have the right version
 is_version_ok, version_resp = niri_reader.request("Version")
-expected_version, actual_version = "25.08 (af4b5f9)", version_resp.get("Version", "unknown")
+expected_version, actual_version = "25.11 (b35bcae)", version_resp.get("Version", "unknown")
 if actual_version != expected_version:
     print(
         "",
@@ -486,6 +493,11 @@ try:
         elif evt_name == "WindowFocusChanged":
             # Update existing focus state
             focus_state.window_id = evt_data["id"]
+
+        elif evt_name == "WindowFocusTimestampChanged":
+            # Update existing focus-timestamp state
+            evt_win_id = evt_data["id"]
+            win_state[evt_win_id]["focus_timestamp"] = evt_data["focus_timestamp"]
 
         elif evt_name == "WindowUrgencyChanged":
             # Update our existing window state

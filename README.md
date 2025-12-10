@@ -15,7 +15,7 @@ This repo holds some basic helper scripts that can be used to modify the behavio
 
 ## niri_tile_to_n.py
 
-This script makes niri behave more like a 'regular' tiling window manager up to the point of having 'N' windows (where N is adjustable, 3 by default), after which windows will be added in the normal scrolling pattern. It uses the [niri IPC](https://github.com/YaLTeR/niri/wiki/IPC) and is only tested on niri version 25.08 so far.
+This script makes niri behave more like a 'regular' tiling window manager up to the point of having 'N' windows (where N is adjustable, 3 by default), after which windows will be added in the normal scrolling pattern. It uses the [niri IPC](https://github.com/YaLTeR/niri/wiki/IPC) and requires niri version 25.08 or greater.
 
 ### Example
 
