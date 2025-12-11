@@ -13,7 +13,7 @@
 # Open fuzzel or close it if it's already open
 PREV_FUZZEL_PID=$(pidof fuzzel)
 if [[ -z "$PREV_FUZZEL_PID" ]]; then
-  fuzzel
+  fuzzel "$@"
 else
   kill "$PREV_FUZZEL_PID"
 fi

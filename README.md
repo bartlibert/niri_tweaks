@@ -236,6 +236,7 @@ This keybind will launch fuzzel with a list of searchable keybinds (only the `-d
 
 For faster/less error-prone parsing, it can be helpful to split your `binds {...}` into a separate kdl file, using the new (v25.11) config [includes](https://yalter.github.io/niri/Configuration%3A-Include.html) functionality of niri!
 
+Also worth noting: the call to fuzzel can be replaced with the [fuzzel helper](https://github.com/heyoeyo/niri_tweaks?tab=readme-ov-file#fuzzel_helpersh) script so that the fuzzy-find search is toggled on/off with the same keybind.
 
 <br>
 
