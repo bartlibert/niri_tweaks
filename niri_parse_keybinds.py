@@ -105,6 +105,9 @@ else:
         subprocess.run(["notify-send", notify_title, notify_explain])
         raise IOError(f"Error parsing keybinds: {KEYBIND_KDL_PATH}")
 
+    # Assume we have: ["...text before 'binds {', "rest of text, including binds"]
+    kdl_bind_split = kdl_binds[1]
+
 # Filter out comments
 filtered_list = []
 for full_line in kdl_bind_split.splitlines():
