@@ -226,13 +226,13 @@ This removes the need for remembering [dedicated keybinds](https://github.com/Ya
 
 This script can be used to parse niri keybinds into a 'dmenu' format, to make them searchable in fuzzel (or similar applications). To avoid requiring dependencies, this script tries to parse the kdl file without any libraries, which may be error prone! Feel free to open an issue if you find any problems.
 
-The output of this script can be passed into a launcher to make it searchable, for example:
+The output of this script can be passed into fuzzel (or even [fzf](https://github.com/junegunn/fzf)) to make it searchable, for example:
 
 ```kdl
-Mod+Slash { spawn-sh "python3 /path/to/niri_parse_keybinds.py -i '/path/to/keybinds.kdl' | fuzzel -d"; }
+Mod+Slash { spawn-sh "python3 /path/to/niri_parse_keybinds.py -i '/path/to/keybinds.kdl' | fuzzel -d -w 100 -f monospace"; }
 ```
 
-This keybind will launch fuzzel with a list of searchable keybinds. By default, the script will search for keybinds in `~/.config/niri/config.kdl`, the `-i` flag can be excluded if already using this path. For now, the script assumes you have only 1 `binds {...}` section.
+This keybind will launch fuzzel with a list of searchable keybinds (only the `-d` flag is needed on fuzzel, but `-w` and `-f` are useful here too). By default, the script will search for keybinds in `~/.config/niri/config.kdl`, the `-i` flag can be excluded if already using this path. For now, the script assumes you have only 1 `binds {...}` section.
 
 For faster/less error-prone parsing, it can be helpful to split your `binds {...}` into a separate kdl file, using the new (v25.11) config [includes](https://yalter.github.io/niri/Configuration%3A-Include.html) functionality of niri!
 

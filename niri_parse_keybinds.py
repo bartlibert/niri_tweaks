@@ -8,11 +8,19 @@
 from os.path import expanduser
 import argparse
 
+# For clarity
+default_kdl = "~/.config/niri/config.kdl"
+default_sep_kb = "\t| "
+default_sep_title = " |\t"
+default_line_end = "\n"
+
 parser = argparse.ArgumentParser(
     description="Parse niri keybinds into 'dmenu' friendly format",
     epilog="The results from this script can be piped to a launcher for display, eg. using: '| fuzzel -d'",
 )
-parser.add_argument("-i", "--keybind_kdl", type=str, default="~/.config/niri/config.kdl", help="Path to keybinds.kdl")
+parser.add_argument(
+    "-i", "--keybind_kdl", type=str, default=default_kdl, help=f"Path to keybinds.kdl (default: {default_kdl})"
+)
 parser.add_argument(
     "-t",
     "--exclude_titles",
@@ -31,19 +39,28 @@ parser.add_argument(
     action="store_true",
     help="If set, aprostrophes & quotation marks will not be removed from commands",
 )
+parser.add_argument("-pk", "--pad_keybind", type=int, default=8, help="Padding added to keybinds (default: 8)")
+parser.add_argument("-pt", "--pad_title", type=int, default=32, help="Padding added to titles (default: 32)")
 parser.add_argument(
-    "-p",
-    "--separator",
+    "-ak",
+    "--sep_keybind",
     type=str,
-    default=" | ",
-    help="Separator used between keybinds/titles/commands (default: ' | ')",
+    default=default_sep_kb,
+    help=f"Separator after keybind text (default: {default_sep_kb!r})",
+)
+parser.add_argument(
+    "-at",
+    "--sep_title",
+    type=str,
+    default=default_sep_title,
+    help=f"Separator after title text (default: {default_sep_title!r})",
 )
 parser.add_argument(
     "-e",
     "--output_line_end",
     type=str,
-    default="\n",
-    help="Line ending (terminating) string when generating output (default: \\n)",
+    default=default_line_end,
+    help=f"Line ending (terminating) string when generating output (default: {default_line_end!r})",
 )
 
 # For convenience
@@ -52,6 +69,10 @@ KEYBIND_KDL_PATH = expanduser(args.keybind_kdl)
 INCLUDE_OVERLAY_TITLES = not args.exclude_titles
 REMOVE_CMD_QUOTATIONS = not args.include_command_quotes
 REMOVE_SPAWN_PREFIX = not args.include_spawn_prefix
+PAD_KEYBIND = args.pad_keybind
+PAD_TITLE = args.pad_title
+SEP_KEYBIND = args.sep_keybind
+SEP_TITLE = args.sep_title
 OUTPUT_LINE_END = args.output_line_end
 
 
@@ -113,7 +134,7 @@ for full_line in kdl_bind_split.splitlines():
     command_split = command.split(";")
 
     # Get the first command (e.g. 'Mod+Q') & command
-    keybind_str = config_split[0]
+    keybind_str = config_split[0].ljust(PAD_KEYBIND)
     command_str = command_split[0].strip()
 
     # Remove 'spawn' or 'spawn-sh' if needed
@@ -133,8 +154,12 @@ for full_line in kdl_bind_split.splitlines():
                 _, title_str, _ = title_split.split(str_marker)
 
     # Join the keybind + title + command into 1 line for printing
-    final_strs = (keybind_str, title_str, command_str) if len(title_str) > 0 else (keybind_str, command_str)
-    filtered_line = " | ".join(final_strs)
+    final_strs = (
+        (keybind_str, SEP_KEYBIND, title_str.ljust(PAD_TITLE), SEP_TITLE, command_str)
+        if len(title_str) > 0
+        else (keybind_str, SEP_KEYBIND, command_str)
+    )
+    filtered_line = "".join(final_strs)
     filtered_list.append(filtered_line)
 
 # Print results to console (for piping into other programs)
