@@ -185,6 +185,10 @@ python3 /path/to/niri_workspace_helper.py --help
 
 ## niri_peekaboo.py
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/f3824bd1-b240-4146-a8f2-6de68c4a5aa9" style="height:240px">
+</p>
+
 This is an experimental script used to pull nearby windows into view as floats for quick interactions, without needing to scroll the view. This is meant for use on maximized or fullscreen windows. Non-full-width windows won't work as expected and may require some IPC updates before they can be properly supported.
 
 The script can be bound to a keypress in your niri config:
@@ -224,17 +228,21 @@ This removes the need for remembering [dedicated keybinds](https://github.com/Ya
 
 ## niri_parse_keybinds.py
 
-This script can be used to parse niri keybinds into a 'dmenu' format, to make them searchable in fuzzel (or similar applications). To avoid requiring dependencies, this script tries to parse the kdl file without any libraries, which may be error prone! Feel free to open an issue if you find any problems.
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/45f4eecd-ae60-46f3-923a-a2d7b36800b6" style="height:320px">
+</p>
 
-The output of this script can be passed into fuzzel (or even [fzf](https://github.com/junegunn/fzf)) to make it searchable, for example:
+This script is meant to help replace the built-in hotkey overlay. It can be used to parse niri keybinds into a 'dmenu' format, to make them searchable in fuzzel (or even [fzf](https://github.com/junegunn/fzf)). To avoid requiring dependencies, this script tries to parse the kdl file without any libraries, which may be error prone! Feel free to open an issue if you find any problems.
+
+The output of this script can be piped into fuzzel to make it searchable, for example:
 
 ```kdl
-Mod+Slash { spawn-sh "python3 /path/to/niri_parse_keybinds.py -i '/path/to/keybinds.kdl' | fuzzel -d -w 100 -f monospace"; }
+Mod+Slash { spawn-sh "python3 /path/to/niri_parse_keybinds.py | fuzzel -d -w 100 -f monospace --match-mode exact"; }
 ```
 
-This keybind will launch fuzzel with a list of searchable keybinds (only the `-d` flag is needed on fuzzel, but `-w` and `-f` are useful here too). By default, the script will search for keybinds in `~/.config/niri/config.kdl`, the `-i` flag can be excluded if already using this path. For now, the script assumes you have only 1 `binds {...}` section.
+This keybind will launch fuzzel with a list of searchable keybinds (only the `-d` flag is needed on fuzzel, the others are nice to have). By default, the script will search for keybinds in `~/.config/niri/config.kdl`, a different file path can be given with the `-i` flag. For now, the script assumes you have only 1 `binds {...}` section and does _not_ follow 'include' directives.
 
-For faster/less error-prone parsing, it can be helpful to split your `binds {...}` into a separate kdl file, using the new (v25.11) config [includes](https://yalter.github.io/niri/Configuration%3A-Include.html) functionality of niri!
+For faster/less error-prone parsing, it can be helpful to split your `binds {...}` into a separate kdl file, using the new (v25.11) config [include](https://yalter.github.io/niri/Configuration%3A-Include.html) functionality of niri, though you will need to provide the `-i /path/to/keybinds.kdl` flag in this case.
 
 Also worth noting: the call to fuzzel can be replaced with the [fuzzel helper](https://github.com/heyoeyo/niri_tweaks?tab=readme-ov-file#fuzzel_helpersh) script so that the fuzzy-find search is toggled on/off with the same keybind.
 

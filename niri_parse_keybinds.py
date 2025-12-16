@@ -90,15 +90,18 @@ except FileNotFoundError:
     subprocess.run(["notify-send", notify_title, notify_explain])
     raise FileNotFoundError(KEYBIND_KDL_PATH)
 
-# Try to grab only the 'binds {...}' section
+# Try to get the text after the 'binds {...}' section
+# -> We can't just search for 'binds' or 'binds {', because the text 'binds'
+#    may appear elsewhere (e.g. in comments) in the file, and 'binds    {'
+#    (i.e. with extra spaces before the curly bracket) is considered valid
 if full_text.startswith("binds"):
     # Assume we're dealing with a stand-alone keybinds.kdl file that starts with 'binds {'
     first_line_break_idx = full_text.index("\n")
-    kdl_bind_split = full_text[1 + first_line_break_idx :]
+    text_after_binds = full_text[1 + first_line_break_idx :]
 else:
-    # Assume the 'bind {' line is further into the file
-    kdl_binds = full_text.split("\nbinds")
-    if len(kdl_binds) != 2:
+    # Assume the 'binds {' line is further into the file, so we catch it after a newline
+    before_and_after_binds = full_text.split("\nbinds")
+    if len(before_and_after_binds) != 2:
         import subprocess
 
         notify_title, notify_explain = "Error parsing keybinds!", "Could not find binds {...} section"
@@ -106,11 +109,11 @@ else:
         raise IOError(f"Error parsing keybinds: {KEYBIND_KDL_PATH}")
 
     # Assume we have: ["...text before 'binds {', "rest of text, including binds"]
-    kdl_bind_split = kdl_binds[1]
+    text_after_binds = before_and_after_binds[1]
 
-# Filter out comments
+# Grab every line from the binds section, not including comments/blanks lines
 filtered_list = []
-for full_line in kdl_bind_split.splitlines():
+for full_line in text_after_binds.splitlines():
 
     # Get rid of indents
     line = full_line.strip()
@@ -119,21 +122,21 @@ for full_line in kdl_bind_split.splitlines():
     if line == "}":
         break
 
-    # Skip comments and other non-bind lines
-    if line.startswith("//") or line.startswith("binds") or line in ("{", "}") or len(line) == 0:
+    # Skip comments and other junk lines
+    if line.startswith("//") or len(line) < 3:
         continue
 
-    # Try to separate command (part insided brackets: { spawn ... } from the part before)
-    bind_command_split = line.split("{")
-    if len(bind_command_split) < 2:
-        continue
-    elif len(bind_command_split) > 2:
-        print("Error parsing keybind! Unexpected double curly bracket:", line, sep="\n", flush=True)
+    # Try to separate config/command (e.g. 'Mod+K ...' vs. '{ spawn ... ; }' parts)
+    # -> Expecting result like: ["config before command", "command ;}"],
+    config_command_split = line.split("{")
+    if len(config_command_split) != 2:
+        if len(config_command_split) > 2:
+            print("Error parsing keybind! Unexpected double curly bracket:", line, sep="\n", flush=True)
         continue
 
     # Break apart binding config & command parts
-    config, command = bind_command_split
-    config_split = config.split(" ")
+    config, command = config_command_split
+    config_split = config.split(" ", 1)
     command_split = command.split(";")
 
     # Get the first command (e.g. 'Mod+Q') & command

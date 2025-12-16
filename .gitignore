@@ -1,0 +1,6 @@
+# Cache files
+*.pyc
+__pycache__
+
+# Catch-all for local ignorables
+ignore/
