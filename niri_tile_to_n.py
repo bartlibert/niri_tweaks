@@ -400,7 +400,7 @@ if not is_outputs_ok:
     print("Error requesting info about monitors", outputs_resp, sep="\n")
     quit()
 output_full_info = {out_key: out_dict["logical"] for out_key, out_dict in outputs_resp["Outputs"].items()}
-output_width_lut = {out_key: out_info["width"] for out_key, out_info in output_full_info.items()}
+output_width_lut = {out_key: out_info["width"] for out_key, out_info in output_full_info.items() if out_info is not None}
 
 # Initialize state tracking
 prev_focus_state = FocusState()
